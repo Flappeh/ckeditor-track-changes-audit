@@ -1,6 +1,24 @@
-from sqlalchemy import Boolean,Column,Integer, String, DateTime
+from sqlalchemy import Boolean,Column,Integer, String, DateTime, BLOB, Text
+from .database import Base
 
-from database import Base
+
+# CKEditor Suggestion Table
+
+class TrackChangesSuggestion(Base):
+    __tablename__ = 'track_changes__suggestion'
+    id = Column(String(36), primary_key=True)
+    environmentId = Column(String(20), nullable=True)
+    authorId = Column(String(96), nullable=True)
+    documentId = Column(String(60), nullable=True)
+    type = Column(String(60), nullable=True)
+    data = Column(Text, nullable=True)
+    createdAt = Column(DateTime, nullable=True)
+    updatedAt = Column(DateTime, nullable=True)
+    deletedAt = Column(DateTime, nullable=True)
+    requesterId = Column(String(96), nullable=True)
+    originalSuggestionId = Column(String(36), nullable=True)
+    hasComments = Column(Integer, nullable=True)
+    state = Column(String(8), nullable=True)
 
 
 class TrackChangesMetadata(Base):
@@ -17,4 +35,4 @@ class TrackChangesData(Base):
     __tablename__ = "track_changes_data"
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     suggestionId = Column(String(50))
-    data = Column(String)
+    data = Column(Text)

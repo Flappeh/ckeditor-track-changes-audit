@@ -1,3 +1,5 @@
 # Virtual Env
 venv/*
 .env
+.env.trial
+.env.prod
