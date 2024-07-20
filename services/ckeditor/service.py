@@ -1,10 +1,7 @@
-import os
 import requests as req
-from dotenv import load_dotenv
 from bs4 import BeautifulSoup as bs
-load_dotenv()
+from utils.environment import BACKEND_URL
 
-BACKEND_URL = os.getenv('CKEDITOR_BACKEND_URL')
 
 def get_document_by_id(id: str):
     url = BACKEND_URL + f'collab/storage/{id}'
