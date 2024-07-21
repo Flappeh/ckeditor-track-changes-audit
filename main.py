@@ -4,11 +4,12 @@ from services.htmlparse.service import parse_suggestion_from_html as parse_html
 from fastapi import FastAPI, HTTPException, Depends, status
 import json
 from services.ckeditor.api import router as ckeditor_router
-
+from services.htmlparse.api import router as html_router
 load_dotenv()
 
 app = FastAPI()
 app.include_router(ckeditor_router)
+app.include_router(html_router)
 
 @app.get('/')
 def root():

@@ -18,4 +18,4 @@ class TrackChanges(BaseModel):
     state: Optional[str]
     
     class Config:
-        orm_mode = True
+        from_orm = True

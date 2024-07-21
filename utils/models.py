@@ -1,10 +1,9 @@
 from sqlalchemy import Boolean,Column,Integer, String, DateTime, BLOB, Text
-from .database import Base
-
+from .database import CKEditorDB,AuditDB
 
 # CKEditor Suggestion Table
 
-class TrackChangesSuggestion(Base):
+class TrackChangesSuggestion(CKEditorDB):
     __tablename__ = 'track_changes__suggestion'
     id = Column(String(36), primary_key=True)
     environmentId = Column(String(20), nullable=True)
@@ -21,7 +20,9 @@ class TrackChangesSuggestion(Base):
     state = Column(String(8), nullable=True)
 
 
-class TrackChangesMetadata(Base):
+# Audit Suggestion DB
+
+class TrackChangesMetadata(AuditDB):
     __tablename__ = 'track_changes_metadata'
     
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -31,7 +32,7 @@ class TrackChangesMetadata(Base):
     updatedAt = Column(DateTime)
     type = Column(String(20))
     
-class TrackChangesData(Base):
+class TrackChangesData(AuditDB):
     __tablename__ = "track_changes_data"
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     suggestionId = Column(String(50))
