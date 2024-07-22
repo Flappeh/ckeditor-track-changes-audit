@@ -23,17 +23,14 @@ class TrackChangesSuggestion(CKEditorDB):
 # Audit Suggestion DB
 
 class TrackChangesMetadata(AuditDB):
-    __tablename__ = 'track_changes_metadata'
-    
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    suggestionId = Column(String(50))
+    __tablename__ = 'audit_metadata'    
+    suggestionId = Column(String(50), primary_key=True, index=True)
     authorId = Column(String(50))
     createdAt = Column(DateTime)
     updatedAt = Column(DateTime)
     type = Column(String(20))
     
 class TrackChangesData(AuditDB):
-    __tablename__ = "track_changes_data"
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    suggestionId = Column(String(50))
+    __tablename__ = "audit_data"
+    suggestionId = Column(String(50), primary_key=True, index=True)
     data = Column(Text)
