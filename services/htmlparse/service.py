@@ -22,7 +22,7 @@ def get_all_distinct_documents(db: Session,skip:int = 0, limit:int = 100):
     data = db.query(models.TrackChangesSuggestion.documentId).distinct().offset(skip).limit(limit).all()
     return [i[0] for i in data]
 
-def convert_to_audit_base(data: List[TrackChanges]):
+def convert_to_audit_base(data: List[TrackChanges]) -> List[AuditBase]:
     try:
         return [{
             "suggestionId": i.id,
@@ -33,6 +33,19 @@ def convert_to_audit_base(data: List[TrackChanges]):
         } for i in data]
     except:
         print("Error converting data")
+        
+def synchronize_all_suggestion_data(db: Session):
+    res = db.query(models.TrackChangesSuggestion).all()
+    converted = convert_to_audit_base(res)
+    insert_suggestions_to_db(db,converted)
+    return db.query(models.TrackChangesMetadata).all()
+    # try:
+    #     daily_suggestions = ckeditor_service.get_all_suggestions(db=db)
+    #     converted =  convert_to_audit_base(daily_suggestions)
+    #     insert_suggestions_to_db(db, converted)
+    # except:
+    #     print("Error occured on synchronizing suggestion data")
+        
         
 def synchronize_suggestion_data(db: Session):
     try:
@@ -45,7 +58,7 @@ def synchronize_suggestion_data(db: Session):
 def insert_suggestions_to_db(db: Session, data: List[AuditBase]):
     try:
         print(data)
-        objects = [AuditBase(**i) for i in data]
+        objects = [models.TrackChangesMetadata(**i) for i in data]
         db.bulk_save_objects(objects=objects)
         db.commit()
         return data
@@ -56,6 +69,10 @@ def process_daily_suggestion(document_id: str):
     pass
 
 
+def parse_html_document(id: str):
+    data = ckeditor_service.get_document_by_id(id)
+    return(parse_suggestion_from_html(data))
+
 def parse_suggestion_from_html(htmlData:str = None):
     soup = bs(htmlData, 'html.parser')
     # Check for text input
@@ -63,32 +80,14 @@ def parse_suggestion_from_html(htmlData:str = None):
     for i in text_suggestions:
         current_content = i.next.get_text()
         results[i['name']] = current_content
-    # for paragraph in paragraphs:
-    #     # Initialize variables to store content and current suggestion name
-    #     current_content = []
-    #     current_name = None
-
-    #     # Find all text nodes and suggestion tags within the current paragraph
-    #     for child in paragraph.children:
-    #         if child.name == 'suggestion-start':
-    #             current_name = child['name']
-    #             current_content = []  # Reset content for new suggestion-start tag
-    #         elif child.name == 'suggestion-end' and current_name:
-    #             if current_name in results:  # Check if name already exists in results
-    #                 results[current_name] += ''.join(current_content).strip()
-    #             else:
-    #                 results[current_name] = ''.join(current_content).strip()
-    #             current_name = None
-    #         else:
-    #             current_content.append(str(child))
-
     # #Check for other element input
-    # figures = soup.find_all('figure', {"data-suggestion-end-after": True})
-    
-    # for figure in figures:
-    #     current_content = []
-    #     current_name = figure['data-suggestion-end-after']
-    #     results[current_name] = figure.html
+    figures = soup.find_all('figure', {"data-suggestion-end-after": True})
+    print(figures)
+    for figure in figures:
+        current_content = []
+        current_name = figure['data-suggestion-end-after']
+        results[current_name] = figure.encode_contents()
+        print(figure.encode_contents())
                 
     
     # Print results
