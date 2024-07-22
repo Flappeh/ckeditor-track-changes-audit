@@ -25,6 +25,7 @@ class TrackChangesSuggestion(CKEditorDB):
 class TrackChangesMetadata(AuditDB):
     __tablename__ = 'audit_metadata'    
     suggestionId = Column(String(50), primary_key=True, index=True)
+    documentId = Column(String(50), index=True)
     authorId = Column(String(50))
     createdAt = Column(DateTime)
     updatedAt = Column(DateTime)

@@ -4,6 +4,7 @@ from datetime import datetime
 
 class AuditBase(BaseModel):
     suggestionId: str
+    documentId: str
     authorId: str
     createdAt: datetime
     updatedAt: datetime
