@@ -3,3 +3,5 @@ venv/*
 .env
 .env.trial
 .env.prod
+.pyc
+__pycache__

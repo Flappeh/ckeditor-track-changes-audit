@@ -25,6 +25,7 @@ class TrackChangesSuggestion(CKEditorDB):
 class TrackChangesMetadata(AuditDB):
     __tablename__ = 'audit_metadata'    
     suggestionId = Column(String(50), primary_key=True, index=True)
+    documentId = Column(String(50), index=True)
     authorId = Column(String(50))
     createdAt = Column(DateTime)
     updatedAt = Column(DateTime)
@@ -34,3 +35,13 @@ class TrackChangesData(AuditDB):
     __tablename__ = "audit_data"
     suggestionId = Column(String(50), primary_key=True, index=True)
     data = Column(Text)
+    
+class User(AuditDB):
+    __tablename__ = "user"
+    id = Column(String(36), primary_key=True)
+    email = Column(String(50), unique=True)
+    username = Column(String(50), unique=True, index=True)
+    hashed_password = Column(String(255))
+    createdAt = Column(DateTime)
+    updatedAt = Column(DateTime)
+    role=Column(String(10))

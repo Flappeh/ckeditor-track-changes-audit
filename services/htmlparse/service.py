@@ -22,10 +22,11 @@ def get_all_distinct_documents(db: Session,skip:int = 0, limit:int = 100):
     data = db.query(models.TrackChangesSuggestion.documentId).distinct().offset(skip).limit(limit).all()
     return [i[0] for i in data]
 
-def convert_to_audit_base(data: List[TrackChanges]) -> List[AuditBase]:
+def convert_to_audit_base(data: List[TrackChanges]) -> List[models.TrackChangesMetadata]:
     try:
         return [{
             "suggestionId": i.id,
+            "documentId": i.documentId,
             "authorId": i.authorId,
             "createdAt": i.createdAt,
             "updatedAt": i.updatedAt,
