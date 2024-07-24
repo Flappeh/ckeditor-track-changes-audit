@@ -6,7 +6,7 @@ from . import schema, service
 from .exceptions import DatabaseError, ConversionError, SynchronizationError, ParsingError
 
 router = APIRouter(
-    prefix="/audit"
+    prefix="/parser"
 )
 
 @router.put('/suggestion/sync')

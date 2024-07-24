@@ -6,12 +6,14 @@ import uvicorn
 from services.ckeditor.api import router as ckeditor_router
 from services.htmlparse.api import router as html_router
 from services.admin.api import router as admin_router
+from services.audit.api import router as audit_router
 load_dotenv()
 
 app = FastAPI()
 app.include_router(ckeditor_router)
 app.include_router(html_router)
 app.include_router(admin_router)
+app.include_router(audit_router)
 
 @app.get('/')
 def root():

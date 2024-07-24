@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from datetime import datetime
 
 
-class AuditMetadata(BaseModel):
+class AuditDataResult(BaseModel):
     suggestionId: str
     documentId: str
     authorId: str
@@ -10,11 +10,6 @@ class AuditMetadata(BaseModel):
     createdAt: datetime
     updatedAt: datetime
     type: str
-    class Config:
-        from_orm = True
-
-class AuditData(BaseModel):
-    suggestionId: str
     data: str
     class Config:
         from_orm = True

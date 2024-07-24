@@ -1,5 +1,6 @@
-from sqlalchemy import Boolean,Column,Integer, String, DateTime, BLOB, Text
+from sqlalchemy import Boolean,Column,Integer, String, DateTime, BLOB, Text, ForeignKey
 from .database import CKEditorDB,AuditDB
+from sqlalchemy.orm import relationship
 
 # CKEditor Suggestion Table
 
@@ -22,19 +23,24 @@ class TrackChangesSuggestion(CKEditorDB):
 
 # Audit Suggestion DB
 
-class TrackChangesMetadata(AuditDB):
+class AuditMetadata(AuditDB):
     __tablename__ = 'audit_metadata'    
     suggestionId = Column(String(50), primary_key=True, index=True)
     documentId = Column(String(50), index=True)
     authorId = Column(String(50))
+    requesterId = Column(String(50))
     createdAt = Column(DateTime)
     updatedAt = Column(DateTime)
-    type = Column(String(20))
+    type = Column(String(60))
     
-class TrackChangesData(AuditDB):
+    data = relationship("AuditData", backref="parent",uselist=False)
+    
+class AuditData(AuditDB):
     __tablename__ = "audit_data"
     suggestionId = Column(String(50), primary_key=True, index=True)
     data = Column(Text)
+    parent_id = Column(String(50), ForeignKey('audit_metadata.suggestionId'))
+    
     
 class User(AuditDB):
     __tablename__ = "user"
