@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, BackgroundTasks, status
 from fastapi.params import Depends
 from utils.middleware import get_db
 from utils import models
@@ -9,17 +9,17 @@ router = APIRouter(
     prefix="/parser"
 )
 
-@router.put('/suggestion/sync')
-async def synchronize_daily_suggestion(db: service.Session = Depends(get_db)):
+@router.put('/suggestion/sync', status_code=status.HTTP_200_OK)
+async def synchronize_daily_suggestion(task: BackgroundTasks, db: service.Session = Depends(get_db)):
     try:
-        data = service.synchronize_suggestion_data(db=db)
-        return data
+        task.add_task(service.synchronize_suggestion_data, db)
     except SynchronizationError as e:
         raise HTTPException(status_code=e.status_code, detail=str(e))
 
 @router.put('/suggestion/sync-all')
 async def synchronize_all_suggestions(db: service.Session = Depends(get_db)):
     try:
+        
         data = service.synchronize_all_suggestion_data(db=db)
         return data
     except SynchronizationError as e:

@@ -98,7 +98,8 @@ def synchronize_suggestion_data(db: Session):
     try:
         daily_suggestions = ckeditor_service.get_all_daily_suggestions(db=db)
         converted = convert_to_audit_base(daily_suggestions)
-        insert_suggestions_to_db(db, converted)
+        all_metadata = insert_suggestions_to_db(db, converted)
+        process_and_insert_audit_data(db, all_metadata)
     except Exception as e:
         logger.error(f"Error synchronizing suggestion data: {str(e)}")
         raise SynchronizationError(f"Error synchronizing suggestion data: {str(e)}")
