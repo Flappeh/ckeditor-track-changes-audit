@@ -1,9 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 
 
 class AuditDataResult(BaseModel):
-    suggestionId: str
+    suggestionId: str = Field(examples=['example-suggestion-id'])
     documentId: str
     authorId: str
     requesterId: str

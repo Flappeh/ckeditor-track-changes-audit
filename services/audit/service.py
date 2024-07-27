@@ -7,19 +7,30 @@ from . import schema
 from sqlalchemy.dialects import mysql
 from sqlalchemy.sql import text
 from utils.database import engine_audit
-from typing import List
+from typing import List,Optional
 
-def get_audit_from_authorId(authorId:str,limit:int, db:Session):
+def parse_parameter(authorId:Optional[str], skip:Optional[int],limit: Optional[int]):
+    pass
+
+def get_audit_from_authorId(authorId:str,skip: int, limit:int,order: str, db:Session):
     query_text = text(
         f"""SELECT * FROM audit_metadata a 
             JOIN audit_data b 
             ON a.suggestionId = b.suggestionId
             WHERE a.authorId = :authorId
+            ORDER BY a.updatedAt {order}
             LIMIT :limit
+            OFFSET :skip
         """
         )
-    data = db.execute(query_text,{"authorId": authorId, "limit": limit},bind_arguments={"bind": engine_audit})
-    data = convert_to_aufit_format(data)
+    params = {
+        "authorId": authorId, 
+        "order": order.upper(),
+        "limit": limit,
+        "skip": skip
+        }
+    data = db.execute(query_text,params=params,bind_arguments={"bind": engine_audit})
+    data = convert_to_audit_format(data)
     return data
 
 def get_audit_from_date(start:datetime,end:datetime,limit:int, db:Session):
@@ -33,10 +44,10 @@ def get_audit_from_date(start:datetime,end:datetime,limit:int, db:Session):
         """
         )
     data = db.execute(query_text,{"start": start, "end": end, "limit": limit},bind_arguments={"bind": engine_audit})
-    data = convert_to_aufit_format(data)
+    data = convert_to_audit_format(data)
     return data
 
-def convert_to_aufit_format(data: List[tuple]) -> schema.AuditDataResult:
+def convert_to_audit_format(data: List[tuple]) -> schema.AuditDataResult:
     return [{
         "suggestionId": i[0],
         "documentId": i[1],

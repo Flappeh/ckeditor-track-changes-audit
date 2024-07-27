@@ -8,6 +8,15 @@ router = APIRouter(
     prefix="/audit"
 )
 
-@router.get('/author')
-async def get_audit_data_from_authorId(authorId: str,limit:int = 100,  db: service.Session = Depends(get_db)):
-    return service.get_audit_from_authorId(authorId=authorId, db=db, limit=limit)
+@router.get(path='/author',
+            response_model=schema.AuditDataResult,
+            description='Get suggestions from user id'
+            )
+async def get_audit_data_from_authorId(authorId: str,skip:int=0, limit:int = 100,order:str="desc",  db: service.Session = Depends(get_db)):
+    data = service.get_audit_from_authorId(authorId=authorId, 
+                                           db=db, 
+                                           limit=limit,
+                                           order=order,
+                                           skip=skip
+                                           )
+    return data
