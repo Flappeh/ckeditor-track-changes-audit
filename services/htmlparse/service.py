@@ -120,7 +120,9 @@ def insert_suggestions_to_db(db: Session, data: List[AuditMetadata]):
 
 def parse_html_document(id: str) -> List[models.AuditData]:
     try:
-        print(id)
+        # print('=====================')
+        # print(f'Document : {id}')
+        # print('=====================')
         data = ckeditor_service.get_document_by_id(id)
         return parse_suggestion_from_html(data)
     except Exception as e:
@@ -137,26 +139,49 @@ def parse_suggestion_from_html(htmlData:str = None) -> List[models.AuditData]:
         text_suggestions = soup.find_all('suggestion-start')
         # Check for other text input with "data-suggestion-end-after" attribute
         other_text_suggestions = soup.find_all('p', {"data-suggestion-start-before": True})
+        
         results.update(parse_text_from_html('name',text_suggestions)) if text_suggestions.__len__() != 0 else None
         results.update(parse_text_from_html("data-suggestion-start-before",other_text_suggestions)) if other_text_suggestions.__len__() != 0 else None
 
 
         # #Check for other element input
-        figures = soup.find_all("figure",{"data-suggestion-end-after": True})
+        figures = soup.find_all(lambda tag: tag.has_attr('data-suggestion-end-after'))
+        # print(figures)
         for figure in figures:
             current_name = figure['data-suggestion-end-after']
             results[current_name] = figure.encode_contents()
+            if figure.name == 'img':
+                results[current_name] = figure.encode()
+
 
         
         # # Print results
         for name, content in results.items():
             parsed_name = name.split(':')
-            data = {
+            if ('insertion' in parsed_name[0] or 'deletion' in parsed_name[0]) and ('tableColumn') in parsed_name[1]:
+                data = {
+                # "type": parsed_name[0],
+                "suggestionId": parsed_name[2],
+                # "authorId": parsed_name[3],
+                "data": 'Column Table',
+                "parent_id": parsed_name[2]
+                }
+            elif 'insertion' in parsed_name[0] or 'deletion' in parsed_name[0]:
+                data = {
                 # "type": parsed_name[0],
                 "suggestionId": parsed_name[1],
                 # "authorId": parsed_name[2],
-                "data": content
-            }
+                "data": content,
+                "parent_id": parsed_name[1]
+                }
+            else:
+                data = {
+                # "type": parsed_name[0],
+                "suggestionId": parsed_name[2],
+                # "authorId": parsed_name[3],
+                "data": content,
+                "parent_id": parsed_name[2]
+                }
             parsed_data.append(data)
         return parsed_data
     except Exception as e:
@@ -168,14 +193,31 @@ def parse_text_from_html(tagName: str, data: ResultSet[Any]) -> dict:
     current_content = []
     results = {}
     for i in data:
+        # print(f'Current Suggestion : {i}')
         current_element = i
         next_element = i.next
         while True:
-            if type(next_element) == Tag and (next_element.name == 'suggestion-end' or 'data-suggestion-end-after' in next_element.attrs):
+            
+            # print("current data")
+            # print("=============")
+            # print(current_element)
+            # print("=============")
+            # print("Next data")
+            # print("=============")
+            # print(next_element)
+            # print("=============")
+            if type(next_element) == Tag and ((next_element.name == 'suggestion-end'
+                                               and 
+                                               next_element.attrs['name'] == i[tagName]
+                                               ) 
+                                              or 
+                                              'data-suggestion-end-after' in next_element.attrs):
+                results[i[tagName]] = ''.join(current_content)
+                current_content = []
                 break
             elif type(next_element) == NavigableString:
                 current_content.append(next_element)
             current_element = next_element
             next_element = current_element.next
-        results[i[tagName]] = ''.join(current_content)
+            # print(current_content)
     return results

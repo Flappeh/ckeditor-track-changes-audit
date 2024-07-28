@@ -9,8 +9,12 @@ from sqlalchemy.sql import text
 from utils.database import engine_audit
 from typing import List,Optional
 
-def parse_parameter(authorId:Optional[str], skip:Optional[int],limit: Optional[int]):
-    pass
+# def parse_parameter(authorId:Optional[str], skip:Optional[int],limit: Optional[int]):
+#     params = {}
+#     if authorId:
+        
+#     pass
+
 
 def get_audit_from_authorId(authorId:str,skip: int, limit:int,order: str, db:Session):
     query_text = text(
@@ -31,6 +35,14 @@ def get_audit_from_authorId(authorId:str,skip: int, limit:int,order: str, db:Ses
         }
     data = db.execute(query_text,params=params,bind_arguments={"bind": engine_audit})
     data = convert_to_audit_format(data)
+    return data
+
+def get_audit_data_test(authorId:str,skip: int, limit:int,order: str, db:Session):
+    data = db.query(
+        models.AuditMetadata,
+        ).join(
+            models.AuditData
+        ).filter(models.AuditMetadata.authorId == authorId).all()
     return data
 
 def get_audit_from_date(start:datetime,end:datetime,limit:int, db:Session):

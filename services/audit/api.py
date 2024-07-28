@@ -20,3 +20,16 @@ async def get_audit_data_from_authorId(authorId: str,skip:int=0, limit:int = 100
                                            skip=skip
                                            )
     return data
+
+@router.get(path='/test',
+            description='Get suggestions from user id'
+            )
+async def get_audit_data_from_authorId(authorId: str,skip:int=0, limit:int = 100,order:str="desc",  db: service.Session = Depends(get_db)):
+    data = service.get_audit_data_test(authorId=authorId, 
+                                           db=db, 
+                                           limit=limit,
+                                           order=order,
+                                           skip=skip
+                                           )
+    return data
+

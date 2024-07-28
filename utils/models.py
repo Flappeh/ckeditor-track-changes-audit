@@ -39,6 +39,7 @@ class AuditData(AuditDB):
     __tablename__ = "audit_data"
     suggestionId = Column(String(50), primary_key=True, index=True)
     data = Column(Text)
+    
     parent_id = Column(String(50), ForeignKey('audit_metadata.suggestionId'))
     
     
