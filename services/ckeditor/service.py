@@ -5,7 +5,7 @@ from utils import models
 from sqlalchemy.orm import Session
 from datetime import timedelta, datetime
 from sqlalchemy.exc import SQLAlchemyError
-from .exceptions import DatabaseError, DocumentNotFoundError, SuggestionRetrievalError
+from utils.exceptions import DatabaseError, DocumentNotFoundError, SuggestionRetrievalError
 
 logger = logging.getLogger(__name__)
 

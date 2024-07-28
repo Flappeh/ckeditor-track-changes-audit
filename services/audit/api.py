@@ -1,35 +1,36 @@
 from fastapi import APIRouter, HTTPException, status
 from fastapi.params import Depends
 from utils.middleware import get_db
-from utils import models
 from . import schema, service
+from fastapi_pagination import Page
 
 router = APIRouter(
     prefix="/audit"
 )
 
 @router.get(path='/author',
-            response_model=schema.AuditDataResult,
-            description='Get suggestions from user id'
+            description='Get suggestions from user id',
             )
-async def get_audit_data_from_authorId(authorId: str,skip:int=0, limit:int = 100,order:str="desc",  db: service.Session = Depends(get_db)):
-    data = service.get_audit_from_authorId(authorId=authorId, 
-                                           db=db, 
-                                           limit=limit,
-                                           order=order,
-                                           skip=skip
+async def get_audit_data_from_authorId(
+    params: schema.AuthorIdParams = Depends(),
+    db: service.Session = Depends(get_db)
+    ) -> Page[schema.AuditDataResult]:
+    data = service.get_audit_from_authorId(authorId=params.authorId, 
+                                           order=params.order,
+                                           db=db
                                            )
     return data
 
-@router.get(path='/test',
-            description='Get suggestions from user id'
+@router.get(path='/time',
+            description='Get suggestions from time range',
             )
-async def get_audit_data_from_authorId(authorId: str,skip:int=0, limit:int = 100,order:str="desc",  db: service.Session = Depends(get_db)):
-    data = service.get_audit_data_test(authorId=authorId, 
-                                           db=db, 
-                                           limit=limit,
-                                           order=order,
-                                           skip=skip
+async def get_audit_data_from_time_range(
+    params: schema.AuthorIdParams = Depends(),
+    db: service.Session = Depends(get_db)
+    ) -> Page[schema.AuditDataResult]:
+    data = service.get_audit_from_authorId(authorId=params.authorId, 
+                                           order=params.order,
+                                           db=db
                                            )
     return data
 

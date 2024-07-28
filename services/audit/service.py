@@ -1,65 +1,58 @@
-import requests as req
-from utils.environment import BACKEND_URL
 from utils import models
 from sqlalchemy.orm import Session
-from datetime import timedelta, datetime
+from datetime import datetime
 from . import schema
-from sqlalchemy.dialects import mysql
 from sqlalchemy.sql import text
 from utils.database import engine_audit
-from typing import List,Optional
-
-# def parse_parameter(authorId:Optional[str], skip:Optional[int],limit: Optional[int]):
-#     params = {}
-#     if authorId:
-        
-#     pass
+from typing import Optional, List
+from fastapi import HTTPException, status
+from fastapi_pagination import  paginate
+# from fastapi_pagination.ext.sqlalchemy import
 
 
-def get_audit_from_authorId(authorId:str,skip: int, limit:int,order: str, db:Session):
+def parse_parameter(authorId:Optional[str], db: Session):
+    if authorId:
+        user = db.query(models.AuditMetadata).filter(models.AuditMetadata.requesterId == authorId).first()
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'User with id : {authorId} not found!')
+
+def get_audit_from_authorId(authorId:str,order: str, db:Session) :
+    parse_parameter(authorId=authorId, db=db)
     query_text = text(
-        f"""SELECT * FROM audit_metadata a 
-            JOIN audit_data b 
+        f"""SELECT * FROM {models.AuditMetadata.__tablename__} a 
+            JOIN {models.AuditData.__tablename__} b 
             ON a.suggestionId = b.suggestionId
             WHERE a.authorId = :authorId
             ORDER BY a.updatedAt {order}
-            LIMIT :limit
-            OFFSET :skip
         """
         )
     params = {
-        "authorId": authorId, 
-        "order": order.upper(),
-        "limit": limit,
-        "skip": skip
+        "authorId": authorId
         }
     data = db.execute(query_text,params=params,bind_arguments={"bind": engine_audit})
+    # return data
     data = convert_to_audit_format(data)
-    return data
+    return paginate(data)
 
-def get_audit_data_test(authorId:str,skip: int, limit:int,order: str, db:Session):
-    data = db.query(
-        models.AuditMetadata,
-        ).join(
-            models.AuditData
-        ).filter(models.AuditMetadata.authorId == authorId).all()
-    return data
-
-def get_audit_from_date(start:datetime,end:datetime,limit:int, db:Session):
+def get_audit_data_from_time_range(authorId:str,order: str, db:Session) :
+    parse_parameter(authorId=authorId, db=db)
     query_text = text(
-        f"""SELECT * FROM audit_metadata a 
-            JOIN audit_data b 
+        f"""SELECT * FROM {models.AuditMetadata.__tablename__} a 
+            JOIN {models.AuditData.__tablename__} b 
             ON a.suggestionId = b.suggestionId
-            WHERE a.updatedAt > :start
-            AND a.updatedAt < :end
-            LIMIT :limit
+            WHERE a.authorId = :authorId
+            ORDER BY a.updatedAt {order}
         """
         )
-    data = db.execute(query_text,{"start": start, "end": end, "limit": limit},bind_arguments={"bind": engine_audit})
+    params = {
+        "authorId": authorId
+        }
+    data = db.execute(query_text,params=params,bind_arguments={"bind": engine_audit})
+    # return data
     data = convert_to_audit_format(data)
-    return data
+    return paginate(data)
 
-def convert_to_audit_format(data: List[tuple]) -> schema.AuditDataResult:
+def convert_to_audit_format(data: list[tuple]) -> List[schema.AuditDataResult]:
     return [{
         "suggestionId": i[0],
         "documentId": i[1],

@@ -4,7 +4,7 @@ from utils.utils import generate_collab_token
 from utils.middleware import get_db
 from utils import models
 from . import schema, service
-from .exceptions import DatabaseError, DocumentNotFoundError, SuggestionRetrievalError
+from utils.exceptions import DatabaseError, DocumentNotFoundError, SuggestionRetrievalError
 
 router = APIRouter(
     prefix="/ckeditor"

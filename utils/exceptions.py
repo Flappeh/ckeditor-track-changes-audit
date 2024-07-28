@@ -8,6 +8,10 @@ class DocumentNotFoundError(HTTPException):
     def __init__(self, document_id: str):
         super().__init__(status_code=404, detail=f"Document with id {document_id} not found")
 
+class UserNotFoundError(HTTPException):
+    def __init__(self, authorId: str):
+        super().__init__(status_code=404, detail=f"User with id {authorId} not found")
+
 class SuggestionRetrievalError(HTTPException):
     def __init__(self, document_id: str):
         super().__init__(status_code=500, detail=f"Error retrieving suggestions for document: {document_id}")

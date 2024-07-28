@@ -32,16 +32,11 @@ class AuditMetadata(AuditDB):
     createdAt = Column(DateTime)
     updatedAt = Column(DateTime)
     type = Column(String(60))
-    
-    data = relationship("AuditData", backref="parent",uselist=False)
-    
+        
 class AuditData(AuditDB):
     __tablename__ = "audit_data"
     suggestionId = Column(String(50), primary_key=True, index=True)
     data = Column(Text)
-    
-    parent_id = Column(String(50), ForeignKey('audit_metadata.suggestionId'))
-    
     
 class User(AuditDB):
     __tablename__ = "user"

@@ -164,7 +164,6 @@ def parse_suggestion_from_html(htmlData:str = None) -> List[models.AuditData]:
                 "suggestionId": parsed_name[2],
                 # "authorId": parsed_name[3],
                 "data": 'Column Table',
-                "parent_id": parsed_name[2]
                 }
             elif 'insertion' in parsed_name[0] or 'deletion' in parsed_name[0]:
                 data = {
@@ -172,7 +171,6 @@ def parse_suggestion_from_html(htmlData:str = None) -> List[models.AuditData]:
                 "suggestionId": parsed_name[1],
                 # "authorId": parsed_name[2],
                 "data": content,
-                "parent_id": parsed_name[1]
                 }
             else:
                 data = {
@@ -180,7 +178,6 @@ def parse_suggestion_from_html(htmlData:str = None) -> List[models.AuditData]:
                 "suggestionId": parsed_name[2],
                 # "authorId": parsed_name[3],
                 "data": content,
-                "parent_id": parsed_name[2]
                 }
             parsed_data.append(data)
         return parsed_data
