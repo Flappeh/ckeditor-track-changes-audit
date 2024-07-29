@@ -3,27 +3,47 @@ from datetime import datetime
 from enum import Enum
 from fastapi import Query
 class AuditDataResult(BaseModel):
-    suggestionId: str = Field(examples=['example-suggestion-id'])
-    documentId: str
-    authorId: str
-    requesterId: str
-    createdAt: datetime
+    suggestionId: str = Field(examples=['suggestion-id-example'])
+    documentId: str = Field(examples=['document-id-example'])
+    authorId: str = Field(examples=['author-id'])
+    requesterId: str = Field(examples=['requestor-id'])
+    createdAt: datetime 
     updatedAt: datetime
-    type: str
-    data: str
+    type: str = Field(examples=['insertion','deletion'])
+    data: str = Field(examples=['this is the data'])
     class Config:
         from_orm = True
 
 class OrderBy(str, Enum):
-    asc = 'ASC'
-    desc = 'DESC'
+    ASC = 'asc'
+    DESC = 'desc'
+
+class SortBy(str, Enum):
+    createdAt = 'created_at'
+    updatedAt = 'updated_at'
 
 class AuthorIdParams:
     def __init__(
         self,
     authorId: str = Query(..., description='User Id to search'),
-    order: OrderBy = Query('DESC', description='Order of returned results')
+    order: OrderBy = Query(OrderBy.ASC, description='Order of returned results'),
+    sort_by: SortBy = Query(SortBy.createdAt, description='Date to sory by.', example='updated_at')
     ):
         self.authorId: str = authorId
-        self.order: OrderBy = order
+        self.order: OrderBy = order.name
+        self.sort_by: SortBy = sort_by.name
+        
+
+class TimeRangeParams:
+    def __init__(
+        self,
+    start: str = Query(..., description='Start date to search'),
+    end: str = Query(..., description='End date to search'),
+    order: OrderBy = Query(OrderBy.ASC, description='Order of returned results'),
+    sort_by: SortBy = Query(SortBy.createdAt, description='Date to sory by.', example='updated_at')
+    ):
+        self.start: str = start
+        self.end: str = end
+        self.order: OrderBy = order.name
+        self.sort_by: SortBy = sort_by.name
         

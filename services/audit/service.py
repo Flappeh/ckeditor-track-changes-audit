@@ -8,7 +8,7 @@ from typing import Optional, List
 from fastapi import HTTPException, status
 from fastapi_pagination import  paginate
 # from fastapi_pagination.ext.sqlalchemy import
-
+import sched
 
 def parse_parameter(authorId:Optional[str], db: Session):
     if authorId:
@@ -16,14 +16,14 @@ def parse_parameter(authorId:Optional[str], db: Session):
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'User with id : {authorId} not found!')
 
-def get_audit_from_authorId(authorId:str,order: str, db:Session) :
+def get_audit_from_authorId(authorId:str,order: str,sort_by:str, db:Session) :
     parse_parameter(authorId=authorId, db=db)
     query_text = text(
         f"""SELECT * FROM {models.AuditMetadata.__tablename__} a 
             JOIN {models.AuditData.__tablename__} b 
             ON a.suggestionId = b.suggestionId
             WHERE a.authorId = :authorId
-            ORDER BY a.updatedAt {order}
+            ORDER BY a.{sort_by} {order}
         """
         )
     params = {
@@ -34,18 +34,19 @@ def get_audit_from_authorId(authorId:str,order: str, db:Session) :
     data = convert_to_audit_format(data)
     return paginate(data)
 
-def get_audit_data_from_time_range(authorId:str,order: str, db:Session) :
-    parse_parameter(authorId=authorId, db=db)
+def get_audit_data_from_time_range(start:datetime, end:datetime, order: str, sort_by: str, db:Session) :
     query_text = text(
         f"""SELECT * FROM {models.AuditMetadata.__tablename__} a 
             JOIN {models.AuditData.__tablename__} b 
             ON a.suggestionId = b.suggestionId
-            WHERE a.authorId = :authorId
-            ORDER BY a.updatedAt {order}
+            WHERE a.updatedAt >= :start
+            and a.updatedAt <= :end
+            ORDER BY a.{sort_by} {order}
         """
         )
     params = {
-        "authorId": authorId
+        "start" : start,
+        "end": end
         }
     data = db.execute(query_text,params=params,bind_arguments={"bind": engine_audit})
     # return data

@@ -4,7 +4,7 @@ from apscheduler.triggers.cron import CronTrigger
 
     
 scheduler = BackgroundScheduler()
-trigger = CronTrigger(second=1)
+trigger = CronTrigger(hour=23,minute=0,second=0)
 
 
 def daily_sync():
