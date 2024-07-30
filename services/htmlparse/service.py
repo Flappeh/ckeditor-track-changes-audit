@@ -129,7 +129,7 @@ def parse_html_document(id: str) -> List[models.AuditData]:
         logger.error(f"Error parsing HTML document: {str(e)}")
         raise ParsingError(f"Error parsing HTML document: {str(e)}")
 
-def parse_suggestion_from_html(htmlData:str = None) -> List[models.AuditData]:
+def parse_suggestion_from_html(htmlData: str = None) -> List[models.AuditData]:
     try:
         results = {}
         parsed_data = []
@@ -140,81 +140,78 @@ def parse_suggestion_from_html(htmlData:str = None) -> List[models.AuditData]:
         # Check for other text input with "data-suggestion-end-after" attribute
         other_text_suggestions = soup.find_all('p', {"data-suggestion-start-before": True})
         
-        results.update(parse_text_from_html('name',text_suggestions)) if text_suggestions.__len__() != 0 else None
-        results.update(parse_text_from_html("data-suggestion-start-before",other_text_suggestions)) if other_text_suggestions.__len__() != 0 else None
+        if text_suggestions:
+            results.update(parse_text_from_html('name', text_suggestions))
+        if other_text_suggestions:
+            results.update(parse_text_from_html("data-suggestion-start-before", other_text_suggestions))
 
-
-        # #Check for other element input
+        # Check for other element input
         figures = soup.find_all(lambda tag: tag.has_attr('data-suggestion-end-after'))
-        # print(figures)
         for figure in figures:
             current_name = figure['data-suggestion-end-after']
             results[current_name] = figure.encode_contents()
             if figure.name == 'img':
                 results[current_name] = figure.encode()
 
-
-        
-        # # Print results
+        # Process results
         for name, content in results.items():
             parsed_name = name.split(':')
-            if ('insertion' in parsed_name[0] or 'deletion' in parsed_name[0]) and ('tableColumn') in parsed_name[1]:
-                data = {
-                # "type": parsed_name[0],
-                "suggestionId": parsed_name[2],
-                # "authorId": parsed_name[3],
-                "data": 'Column Table',
-                }
-            elif 'insertion' in parsed_name[0] or 'deletion' in parsed_name[0]:
-                data = {
-                # "type": parsed_name[0],
-                "suggestionId": parsed_name[1],
-                # "authorId": parsed_name[2],
-                "data": content,
-                }
-            else:
-                data = {
-                # "type": parsed_name[0],
-                "suggestionId": parsed_name[2],
-                # "authorId": parsed_name[3],
-                "data": content,
-                }
+            data = {
+                "suggestionId": parsed_name[-2] if len(parsed_name) >= 3 else parsed_name[-1],
+                "data": 'Column Table' if ('tableColumn' in name) else content,
+            }
             parsed_data.append(data)
+
         return parsed_data
+
+    except AttributeError as e:
+        logger.error(f"AttributeError in parse_suggestion_from_html: {str(e)}")
+        raise ParsingError(f"Error accessing attribute while parsing HTML: {str(e)}")
+    except KeyError as e:
+        logger.error(f"KeyError in parse_suggestion_from_html: {str(e)}")
+        raise ParsingError(f"Missing key while parsing HTML: {str(e)}")
+    except ValueError as e:
+        logger.error(f"ValueError in parse_suggestion_from_html: {str(e)}")
+        raise ParsingError(f"Value error while parsing HTML: {str(e)}")
     except Exception as e:
-        logger.error(f"Error parsing suggestion from HTML: {str(e)}")
-        raise ParsingError(f"Error parsing suggestion from HTML: {str(e)}")
+        logger.error(f"Unexpected error in parse_suggestion_from_html: {str(e)}")
+        raise ParsingError(f"Unexpected error while parsing HTML: {str(e)}")
     
 
 def parse_text_from_html(tagName: str, data: ResultSet[Any]) -> dict:
-    current_content = []
-    results = {}
-    for i in data:
-        # print(f'Current Suggestion : {i}')
-        current_element = i
-        next_element = i.next
-        while True:
-            
-            # print("current data")
-            # print("=============")
-            # print(current_element)
-            # print("=============")
-            # print("Next data")
-            # print("=============")
-            # print(next_element)
-            # print("=============")
-            if type(next_element) == Tag and ((next_element.name == 'suggestion-end'
-                                               and 
-                                               next_element.attrs['name'] == i[tagName]
-                                               ) 
-                                              or 
-                                              'data-suggestion-end-after' in next_element.attrs):
-                results[i[tagName]] = ''.join(current_content)
-                current_content = []
-                break
-            elif type(next_element) == NavigableString:
-                current_content.append(next_element)
-            current_element = next_element
-            next_element = current_element.next
-            # print(current_content)
-    return results
+    try:
+        current_content = []
+        results = {}
+        for i in data:
+            current_element = i
+            next_element = i.next
+            while True:
+                if type(next_element) == Tag and ((next_element.name == 'suggestion-end'
+                                                   and 
+                                                   next_element.attrs['name'] == i[tagName]
+                                                   ) 
+                                                  or 
+                                                  'data-suggestion-end-after' in next_element.attrs):
+                    results[i[tagName]] = ''.join(current_content)
+                    current_content = []
+                    break
+                elif type(next_element) == NavigableString:
+                    current_content.append(next_element)
+                current_element = next_element
+                next_element = current_element.next
+                
+                if next_element is None:
+                    logger.warning(f"End of document reached without finding suggestion-end for {i[tagName]}")
+                    break
+
+        return results
+
+    except AttributeError as e:
+        logger.error(f"AttributeError in parse_text_from_html: {str(e)}")
+        raise ParsingError(f"Error accessing attribute while parsing HTML: {str(e)}")
+    except KeyError as e:
+        logger.error(f"KeyError in parse_text_from_html: {str(e)}")
+        raise ParsingError(f"Missing key while parsing HTML: {str(e)}")
+    except Exception as e:
+        logger.error(f"Unexpected error in parse_text_from_html: {str(e)}")
+        raise ParsingError(f"Unexpected error while parsing HTML: {str(e)}")
