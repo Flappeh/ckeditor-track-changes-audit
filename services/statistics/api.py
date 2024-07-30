@@ -5,22 +5,17 @@ from . import schema, service
 from fastapi_pagination import Page
 
 router = APIRouter(
-    prefix="/audit"
+    prefix="/stats"
 )
 
-@router.get(path='/author',
-            description='Get suggestions from user id',
+@router.get(path='/suggestion',
+            description='Get total suggestion count from database',
             )
-async def get_audit_data_from_authorId(
-    params: schema.AuthorIdParams = Depends(),
+async def get_suggestion_count_from_database(
     db: service.Session = Depends(get_db)
-    ) -> Page[schema.AuditDataResult]:
+    ):
     try:
-        data = service.get_audit_from_authorId(authorId=params.authorId, 
-                                            order=params.order,
-                                            sort_by=params.sort_by,
-                                            db=db
-                                            )
+        data = service.get_suggestion_count(db=db)
         return data
     except HTTPException as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e)

@@ -8,6 +8,7 @@ from services.ckeditor.api import router as ckeditor_router
 from services.htmlparse.api import router as html_router
 from services.admin.api import router as admin_router
 from services.audit.api import router as audit_router
+from services.statistics.api import router as stats_router
 from fastapi_pagination import add_pagination
 from utils import scheduled_tasks
 from contextlib import asynccontextmanager
@@ -22,10 +23,11 @@ async def lifespan(app: FastAPI):
     scheduled_tasks.scheduler.shutdown()
     
 app = FastAPI(lifespan=lifespan)
-app.include_router(ckeditor_router, tags=['Ckeditor'])
-app.include_router(html_router, tags=['Parser'])
-app.include_router(admin_router, tags=['Administration'])
-app.include_router(audit_router, tags=['Audit'])
+app.include_router(ckeditor_router, tags=['Ckeditor'], include_in_schema=False)
+app.include_router(html_router, tags=['Parser'], include_in_schema=False)
+app.include_router(admin_router, tags=['Administration'], include_in_schema=False)
+app.include_router(audit_router, tags=['Audit Logs'])
+app.include_router(stats_router, tags=['Statistics'])
 
 add_pagination(app)
 

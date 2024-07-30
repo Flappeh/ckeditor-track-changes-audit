@@ -2,7 +2,6 @@ from fastapi import APIRouter, HTTPException, status
 from fastapi.params import Depends
 from utils.utils import generate_collab_token
 from utils.middleware import get_db
-from utils import models
 from . import schema, service
 
 router = APIRouter(
