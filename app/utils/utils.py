@@ -1,7 +1,34 @@
 import jwt
 from time import time
-from .environment import CKEDITOR_COLLAB_ACCESS_KEY, CKEDITOR_COLLAB_ENV_ID
+from .environment import CKEDITOR_COLLAB_ACCESS_KEY, CKEDITOR_COLLAB_ENV_ID, CKEDITOR_COLLAB_API_SECRET
 import bcrypt
+import hmac
+import hashlib
+import json
+import urllib.parse
+from typing import Optional
+def hmacDigest(data:str, key:str):
+    keyEncoded = key.encode()
+    dataEncoded = data.encode()
+
+    h = hmac.new(keyEncoded, dataEncoded, hashlib.sha256)
+
+    return h.hexdigest()
+
+
+def generateSignature(method:str , uri:str, timestamp, body: Optional[str]):
+    url = urllib.parse.urlparse(uri)
+    path = url.path
+    if (url.query):
+        path = path + "?" + url.query
+
+    methodUpperCase = method.upper()
+    data = methodUpperCase + path + str(timestamp)
+
+    if (body):
+        data += json.dumps(body, separators=(',',':'))
+
+    return hmacDigest(data, CKEDITOR_COLLAB_API_SECRET)
 
 def generate_collab_token():
     timestamp = int(time())

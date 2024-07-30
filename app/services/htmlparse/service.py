@@ -1,4 +1,3 @@
-import json
 import logging
 from bs4 import BeautifulSoup as bs
 from bs4.element import NavigableString, Tag, ResultSet
@@ -13,6 +12,7 @@ from .exceptions import DatabaseError, ConversionError, SynchronizationError, Pa
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.dialects.mysql import insert
 from typing import Any
+from sqlalchemy import update
 logger = logging.getLogger(__name__)
 
 
@@ -59,14 +59,62 @@ def convert_to_audit_base(data: List[TrackChanges]) -> List[models.AuditMetadata
 
 def synchronize_all_suggestion_data(db: Session):
     try:
+        sync = start_new_synchronization(db, 'all')
         res = db.query(models.TrackChangesSuggestion).all()
         converted = convert_to_audit_base(res)
-        all_metadatas = insert_suggestions_to_db(db, converted)
-        inserted = process_and_insert_audit_data(db, all_metadatas)
-        return inserted
+        all_metadata = insert_suggestions_to_db(db, converted)
+        inserted = process_and_insert_audit_data(db, all_metadata)
+        update_synchronization(db, sync, len(all_metadata), inserted)
     except Exception as e:
         logger.error(f"Error synchronizing all suggestion data: {str(e)}")
         raise SynchronizationError(f"Error synchronizing all suggestion data: {str(e)}")
+
+def synchronize_suggestion_data(db: Session):
+    try:
+        sync = start_new_synchronization(db=db, type='daily')
+        one_day = timedelta(hours=24)
+        last_one_day = datetime.now() - one_day
+        daily_suggestions = db.query(models.TrackChangesSuggestion).filter(models.TrackChangesSuggestion.createdAt > last_one_day).all()
+        if len(daily_suggestions) <= 0:
+            update_synchronization(db, sync, 0, 0)
+            return
+        converted = convert_to_audit_base(daily_suggestions)
+        all_metadata = insert_suggestions_to_db(db, converted)
+        inserted = process_and_insert_audit_data(db, all_metadata)
+        update_synchronization(db, sync, len(all_metadata), inserted)
+    except Exception as e:
+        logger.error(f"Error synchronizing suggestion data: {str(e)}")
+        raise SynchronizationError(f"Error synchronizing suggestion data: {str(e)}")
+
+def update_synchronization(db:Session, sync_item: models.AuditSynchronization, total_metadata, total_data):
+    try:
+        sync_item.endTime = datetime.now()
+        sync_item.totalData = total_data
+        sync_item.totalSuggestions = total_metadata
+        db.commit()
+        db.refresh(sync_item)
+    except Exception:
+        raise DatabaseError('Error updating synchronization')
+
+def start_new_synchronization(db:Session, type:str):
+    new_sync = models.AuditSynchronization(
+        syncType= type,
+        startTime = datetime.now()
+    )
+    db.add(new_sync)
+    db.commit()
+    db.refresh(new_sync)
+    return new_sync
+
+def check_running_synchronization(db: Session):
+    error = None
+    try:
+        res = db.query(models.AuditSynchronization).order_by(models.AuditSynchronization.startTime.desc()).first()
+        if res and res.endTime == None:
+            error = SynchronizationError('Synchronization already running')
+            raise error
+    except Exception:
+        raise error
     
 def process_and_insert_audit_data(db: Session, documentIds: List[AuditMetadata]):
     try:
@@ -88,21 +136,12 @@ def process_and_insert_audit_data(db: Session, documentIds: List[AuditMetadata])
         db.commit()
 
         logger.info(f"Processed {len(unique_document_ids)} documents and inserted {len(audit_data_to_insert)} audit records.")
-
+        return len(audit_data_to_insert)
     except Exception as e:
         db.rollback()
         logger.error(f"Error processing and inserting audit data: {str(e)}")
         raise DatabaseError(f"Error processing and inserting audit data: {str(e)}")
 
-def synchronize_suggestion_data(db: Session):
-    try:
-        daily_suggestions = ckeditor_service.get_all_daily_suggestions(db=db)
-        converted = convert_to_audit_base(daily_suggestions)
-        all_metadata = insert_suggestions_to_db(db, converted)
-        process_and_insert_audit_data(db, all_metadata)
-    except Exception as e:
-        logger.error(f"Error synchronizing suggestion data: {str(e)}")
-        raise SynchronizationError(f"Error synchronizing suggestion data: {str(e)}")
 
 def insert_suggestions_to_db(db: Session, data: List[AuditMetadata]):
     try:
@@ -176,7 +215,6 @@ def parse_suggestion_from_html(htmlData: str = None) -> List[models.AuditData]:
     except Exception as e:
         logger.error(f"Unexpected error in parse_suggestion_from_html: {str(e)}")
         raise ParsingError(f"Unexpected error while parsing HTML: {str(e)}")
-    
 
 def parse_text_from_html(tagName: str, data: ResultSet[Any]) -> dict:
     try:

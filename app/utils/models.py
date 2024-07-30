@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean,Column,Integer, String, DateTime, BLOB, Text, ForeignKey
+from sqlalchemy import Boolean,Column,Integer, String, DateTime, BLOB, Text
 from .database import CKEditorDB,AuditDB
 from sqlalchemy.orm import relationship
 
@@ -37,6 +37,15 @@ class AuditData(AuditDB):
     __tablename__ = "audit_data"
     suggestionId = Column(String(50), primary_key=True, index=True)
     data = Column(Text)
+        
+class AuditSynchronization(AuditDB):
+    __tablename__ = "audit_synchronization"
+    id = Column(Integer,autoincrement=True, primary_key=True, index=True)
+    syncType = Column(String(10))
+    startTime = Column(DateTime)
+    endTime = Column(DateTime)
+    totalSuggestions = Column(Integer)
+    totalData = Column(Integer)
     
 class User(AuditDB):
     __tablename__ = "user"
