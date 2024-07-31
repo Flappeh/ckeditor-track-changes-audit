@@ -13,7 +13,7 @@ router = APIRouter(
 async def synchronize_daily_suggestion(task: BackgroundTasks, db: service.Session = Depends(get_db)):
     try:
         service.check_running_synchronization(db)
-        task.add_task(service.synchronize_suggestion_data, db)
+        task.add_task(service.synchronize_daily_suggestion_data, db)
         return {
                 "message": "Request received, running daily synchronization"
                 }

@@ -69,7 +69,7 @@ def synchronize_all_suggestion_data(db: Session):
         logger.error(f"Error synchronizing all suggestion data: {str(e)}")
         raise SynchronizationError(f"Error synchronizing all suggestion data: {str(e)}")
 
-def synchronize_suggestion_data(db: Session):
+def synchronize_daily_suggestion_data(db: Session):
     try:
         sync = start_new_synchronization(db=db, type='daily')
         one_day = timedelta(hours=24)
@@ -120,28 +120,35 @@ def process_and_insert_audit_data(db: Session, documentIds: List[AuditMetadata])
     try:
         document_id_list = [i['documentId'] for i in documentIds]
         unique_document_ids = list(dict.fromkeys(document_id_list))
-        audit_data_to_insert = []
+        inserted_data = 0
         for doc_id in unique_document_ids:
             try:
                 parsed_data = parse_html_document(doc_id)
-                audit_data_to_insert.extend(parsed_data)
+                insert_auditdata_to_db(db, parsed_data)
+                inserted_data += len(parsed_data)
             except ParsingError as e:
                 logger.error(f"Error parsing document {doc_id}: {str(e)}")
                 continue
-        stmt = insert(models.AuditData).values(audit_data_to_insert)
-        stmt = stmt.on_duplicate_key_update(
-            data=stmt.inserted.data
-            )
-        db.execute(stmt)
-        db.commit()
-
-        logger.info(f"Processed {len(unique_document_ids)} documents and inserted {len(audit_data_to_insert)} audit records.")
-        return len(audit_data_to_insert)
+            except DatabaseError as e:
+                logger.error(f"Error inserting data for document : {doc_id} to database")
+                continue
+        logger.info(f"Processed {len(unique_document_ids)} documents and inserted {inserted_data} audit records.")
+        return inserted_data
     except Exception as e:
         db.rollback()
         logger.error(f"Error processing and inserting audit data: {str(e)}")
         raise DatabaseError(f"Error processing and inserting audit data: {str(e)}")
 
+def insert_auditdata_to_db(db:Session, data: models.AuditData):
+    try:
+        stmt = insert(models.AuditData).values(data)
+        stmt = stmt.on_duplicate_key_update(
+            data=stmt.inserted.data
+            )
+        db.execute(stmt)
+        db.commit()
+    except Exception as e:
+        raise DatabaseError(f"Error inserting data for suggestionId : {data.suggestionId} to database")
 
 def insert_suggestions_to_db(db: Session, data: List[AuditMetadata]):
     try:
@@ -159,9 +166,6 @@ def insert_suggestions_to_db(db: Session, data: List[AuditMetadata]):
 
 def parse_html_document(id: str) -> List[models.AuditData]:
     try:
-        # print('=====================')
-        # print(f'Document : {id}')
-        # print('=====================')
         data = ckeditor_service.get_document_by_id(id)
         return parse_suggestion_from_html(data)
     except Exception as e:
