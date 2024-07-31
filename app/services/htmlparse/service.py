@@ -118,6 +118,21 @@ def check_running_synchronization(db: Session):
             raise error
     except Exception:
         raise error
+
+def delete_running_synchronization(db: Session):
+    try:
+        res = db.query(
+            models.AuditSynchronization
+            ).order_by(
+                models.AuditSynchronization.startTime.desc()
+                ).filter(models.AuditSynchronization.endTime == None
+                         ).first()
+        if res and res.endTime == None:
+            db.delete(res)
+            logger.error('Removed running synchronization')
+            return {"Message": "Removed running synchronization"}
+    except Exception:
+        raise DatabaseError('Error deleting synchronization data')
     
 def process_and_insert_audit_data(db: Session, documentIds: List[AuditMetadata]):
     try:

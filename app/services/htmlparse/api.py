@@ -38,6 +38,13 @@ async def get_all_distinct_document_from_suggestion(skip: int = 0, limit:int = 1
     except DatabaseError as e:
         raise HTTPException(status_code=e.status_code, detail=str(e))
 
+@router.delete('/sync')
+async def delete_running_synchronization(db: service.Session = Depends(get_db)):
+    try:
+        return service.delete_running_synchronization(db=db)
+    except DatabaseError as e:
+        raise HTTPException(status_code=e.status_code, detail=str(e))
+
 # @router.get('/document-ids/daily')
 # async def get_all_daily_edited_documents(skip: int = 0, limit:int = 100, db: service.Session = Depends(get_db)):
 #     try:
