@@ -186,7 +186,6 @@ def insert_suggestions_to_db(db: Session, data: List[AuditMetadata]):
 
 def parse_html_document(id: str) -> List[models.AuditData]:
     try:
-        logger.info(f'Parsing suggestions for documentId : {id}')
         data = ckeditor_service.get_document_by_id(id)
         return parse_suggestion_from_html(data)
     except Exception as e:

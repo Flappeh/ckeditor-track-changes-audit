@@ -3,7 +3,7 @@ from fastapi.params import Depends
 from utils.middleware import get_db
 from . import schema, service
 from fastapi_pagination import Page
-
+from utils.exceptions import UserNotFoundError
 router = APIRouter(
     prefix="/audit"
 )
@@ -14,7 +14,7 @@ router = APIRouter(
 async def get_audit_data_from_authorId(
     params: schema.AuthorIdParams = Depends(),
     db: service.Session = Depends(get_db)
-    ) -> Page[schema.AuditDataResult]:
+    ) -> Page[schema.AuditDataResult] :
     try:
         data = service.get_audit_from_authorId(authorId=params.authorId, 
                                             order=params.order,
@@ -22,8 +22,11 @@ async def get_audit_data_from_authorId(
                                             db=db
                                             )
         return data
+    
+    except UserNotFoundError:
+        raise UserNotFoundError(f'User with id : {params.authorId} not found!')
     except HTTPException as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 @router.get(path='/time',
             description='Get suggestions from time range',
@@ -34,7 +37,6 @@ async def get_audit_data_from_time_range(
     ) -> Page[schema.AuditDataResult]:
     if params.start > params.end:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Start date must be before End date")
-    
     try:
         data = service.get_audit_data_from_time_range(
                                             start=params.start,
@@ -45,7 +47,7 @@ async def get_audit_data_from_time_range(
                                             )
         return data
     except HTTPException as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=e)
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
 
 @router.get(path='/document',
             description='Get suggestions from document id',
@@ -63,5 +65,5 @@ async def get_audit_data_from_document_id(
                                             )
         return data
     except HTTPException as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=e)
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
 
