@@ -13,8 +13,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.dialects.mysql import insert
 from typing import Any
 from sqlalchemy import update
-logger = logging.getLogger(__name__)
+from utils.utils import get_logger
 
+logger = get_logger()
 
 
 def get_all_suggestions(db: Session, skip: int = 0, limit: int=100):
@@ -97,6 +98,7 @@ def update_synchronization(db:Session, sync_item: models.AuditSynchronization, t
         raise DatabaseError('Error updating synchronization')
 
 def start_new_synchronization(db:Session, type:str):
+    logger.info(f'Received synchronization request, type: {type}')
     new_sync = models.AuditSynchronization(
         syncType= type,
         startTime = datetime.now()
@@ -112,6 +114,7 @@ def check_running_synchronization(db: Session):
         res = db.query(models.AuditSynchronization).order_by(models.AuditSynchronization.startTime.desc()).first()
         if res and res.endTime == None:
             error = SynchronizationError('Synchronization already running')
+            logger.error('Received synchronization request while synchronization already running')
             raise error
     except Exception:
         raise error
@@ -168,6 +171,7 @@ def insert_suggestions_to_db(db: Session, data: List[AuditMetadata]):
 
 def parse_html_document(id: str) -> List[models.AuditData]:
     try:
+        logger.info(f'Parsing suggestions for documentId : {id}')
         data = ckeditor_service.get_document_by_id(id)
         return parse_suggestion_from_html(data)
     except Exception as e:

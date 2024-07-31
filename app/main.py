@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
     
 app = FastAPI(lifespan=lifespan)
 app.include_router(ckeditor_router, tags=['Ckeditor'], include_in_schema=False)
-app.include_router(html_router, tags=['Parser'], include_in_schema=False)
+app.include_router(html_router, tags=['Parser'], include_in_schema=True)
 app.include_router(admin_router, tags=['Administration'], include_in_schema=False)
 app.include_router(audit_router, tags=['Audit Logs'])
 app.include_router(stats_router, tags=['Statistics'])
