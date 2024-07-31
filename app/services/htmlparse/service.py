@@ -124,6 +124,8 @@ def process_and_insert_audit_data(db: Session, documentIds: List[AuditMetadata])
         for doc_id in unique_document_ids:
             try:
                 parsed_data = parse_html_document(doc_id)
+                if len(parsed_data) == 0:
+                    continue
                 insert_auditdata_to_db(db, parsed_data)
                 inserted_data += len(parsed_data)
             except ParsingError as e:
