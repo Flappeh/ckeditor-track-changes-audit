@@ -45,6 +45,13 @@ async def delete_running_synchronization(db: service.Session = Depends(get_db)):
     except DatabaseError as e:
         raise HTTPException(status_code=e.status_code, detail=str(e))
 
+@router.put('/sync-metadata')
+async def sync_all_metadata(db: service.Session = Depends(get_db)):
+    try:
+        return service.sync_all_metadata(db=db)
+    except DatabaseError as e:
+        raise HTTPException(status_code=e.status_code, detail=str(e))
+
 # @router.get('/document-ids/daily')
 # async def get_all_daily_edited_documents(skip: int = 0, limit:int = 100, db: service.Session = Depends(get_db)):
 #     try:

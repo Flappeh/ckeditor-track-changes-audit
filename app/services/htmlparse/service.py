@@ -70,6 +70,20 @@ def synchronize_all_suggestion_data(db: Session):
         logger.error(f"Error synchronizing all suggestion data: {str(e)}")
         raise SynchronizationError(f"Error synchronizing all suggestion data: {str(e)}")
 
+def sync_all_metadata(db: Session):
+    try:
+        sync = start_new_synchronization(db=db, type='metadata')
+        res = db.query(models.TrackChangesSuggestion).all()
+        if len(res) <= 0:
+            update_synchronization(db, sync, 0, 0)
+            return
+        converted = convert_to_audit_base(res)
+        all_metadata = insert_suggestions_to_db(db, converted)
+        return (f"Finished synchronizing {len(all_metadata)} metadata")
+    except Exception as e:
+        logger.error(f"Error synchronizing suggestion data: {str(e)}")
+        raise SynchronizationError(f"Error synchronizing suggestion data: {str(e)}")
+
 def synchronize_daily_suggestion_data(db: Session):
     try:
         sync = start_new_synchronization(db=db, type='daily')
