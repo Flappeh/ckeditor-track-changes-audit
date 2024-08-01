@@ -1,7 +1,7 @@
 from sqlalchemy import Boolean,Column,Integer, String, DateTime, BLOB, Text
 from .database import CKEditorDB,AuditDB
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.mysql import LONGTEXT
+from sqlalchemy.dialects.mysql import LONGTEXT, BINARY
 
 # CKEditor Suggestion Table
 
@@ -20,6 +20,9 @@ class TrackChangesSuggestion(CKEditorDB):
     originalSuggestionId = Column(String(36), nullable=True)
     hasComments = Column(Integer, nullable=True)
     state = Column(String(8), nullable=True)
+    attributesBlob = Column(BINARY)
+    visibilityChangedAtVersion = Column(Integer)
+    snapshotDate = Column(DateTime)
 
 
 # Audit Suggestion DB
