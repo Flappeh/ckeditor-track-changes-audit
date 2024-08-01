@@ -152,6 +152,9 @@ def process_and_insert_audit_data(db: Session, documentIds: List[AuditMetadata])
             except DatabaseError as e:
                 logger.error(f"Error inserting data for document : {doc_id} to database")
                 continue
+            except Exception as e:
+                logger.error(f'Error encountered on document {doc_id}')
+                continue
         logger.info(f"Processed {len(unique_document_ids)} documents and inserted {inserted_data} audit records.")
         return inserted_data
     except Exception as e:

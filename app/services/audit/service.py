@@ -42,6 +42,28 @@ def get_audit_from_authorId(authorId:str,order: str,sort_by:str, db:Session) :
     except Exception:
         logger.error(f"Error retrieving logs for authorId : {authorId}")
         raise DatabaseError(f"Error retrieving logs for authorId : {authorId}")
+
+def get_audit_from_documentId(documentId:str,order: str,sort_by:str, db:Session) :
+    try:
+        query_text = text(
+            f"""SELECT * FROM {models.AuditMetadata.__tablename__} a 
+                JOIN {models.AuditData.__tablename__} b 
+                ON a.suggestionId = b.suggestionId
+                WHERE a.documentId = :documentId
+                ORDER BY a.{sort_by} {order}
+            """
+            )
+        params = {
+            "documentId": documentId
+            }
+        data = db.execute(query_text,params=params,bind_arguments={"bind": engine_audit})    
+        data = convert_to_audit_format(data)
+        return paginate(data)
+    except UserNotFoundError:
+        raise UserNotFoundError(f'Document with id : {documentId} not found!')
+    except Exception:
+        logger.error(f"Error retrieving logs for documentId : {documentId}")
+        raise DatabaseError(f"Error retrieving logs for documentId : {documentId}")
     
 def get_audit_data_from_time_range(start:datetime, end:datetime, order: str, sort_by: str, db:Session) :
     try:

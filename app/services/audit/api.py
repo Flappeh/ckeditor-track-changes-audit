@@ -57,7 +57,7 @@ async def get_audit_data_from_document_id(
     db: service.Session = Depends(get_db)
     ) -> Page[schema.AuditDataResult]:
     try:
-        data = service.get_audit_data_from_time_range(
+        data = service.get_audit_from_documentId(
                                             documentId=params.documentId,
                                             sort_by=params.sort_by, 
                                             order=params.order,

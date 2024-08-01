@@ -1,6 +1,7 @@
 from sqlalchemy import Boolean,Column,Integer, String, DateTime, BLOB, Text
 from .database import CKEditorDB,AuditDB
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.mysql import LONGTEXT
 
 # CKEditor Suggestion Table
 
@@ -36,7 +37,7 @@ class AuditMetadata(AuditDB):
 class AuditData(AuditDB):
     __tablename__ = "audit_data"
     suggestionId = Column(String(50), primary_key=True, index=True)
-    data = Column(Text)
+    data = Column(LONGTEXT)
         
 class AuditSynchronization(AuditDB):
     __tablename__ = "audit_synchronization"
